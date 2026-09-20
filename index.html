@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Mi Horario</title>
+<meta name="theme-color" content="#182b2c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mi Horario">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="auth-screen" id="auth-screen">
+  <div class="auth-card">
+    <h1>Mi horario</h1>
+    <p class="subtitle" id="auth-subtitle">Escribe tu correo y te mandamos un código de 6 dígitos para entrar.</p>
+
+    <form id="auth-form" class="add-form">
+      <label>
+        Correo
+        <input type="email" id="auth-email" placeholder="tucorreo@ejemplo.com" required>
+      </label>
+      <button type="submit" class="primary-btn">Enviarme un código</button>
+    </form>
+
+    <form id="auth-code-form" class="add-form" hidden>
+      <label>
+        Código
+        <input type="text" id="auth-code" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" maxlength="10" placeholder="123456" required>
+      </label>
+      <button type="submit" class="primary-btn">Confirmar código</button>
+      <button type="button" id="auth-back" class="ghost-btn">Usar otro correo / reenviar</button>
+    </form>
+
+    <p id="auth-status" class="csv-feedback" role="status"></p>
+  </div>
+</div>
+
+<div class="board" id="board" hidden>
+
+  <header class="board-header">
+    <div class="header-left">
+      <h1>Mi horario</h1>
+      <p class="subtitle" id="account-email">Sube tus clases y te avisamos qué sigue</p>
+    </div>
+    <div class="header-clock">
+      <span id="live-time">--:--</span>
+      <span id="live-date">--</span>
+      <button type="button" id="logout-btn" class="ghost-btn logout-btn">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <section class="now-panel" id="now-panel">
+    <div class="now-block">
+      <span class="now-label">Ahora</span>
+      <p class="now-value" id="now-class">Sin clases en curso</p>
+      <p class="now-sub" id="now-sub">&nbsp;</p>
+    </div>
+    <div class="divider" aria-hidden="true"></div>
+    <div class="now-block">
+      <span class="now-label">Siguiente</span>
+      <p class="now-value" id="next-class">—</p>
+      <p class="now-sub" id="next-sub">&nbsp;</p>
+    </div>
+    <button id="notif-toggle" class="notif-btn" type="button">Activar avisos</button>
+    <p id="notif-status" class="csv-feedback" role="status"></p>
+  </section>
+
+  <section class="day-tabs" id="day-tabs" role="tablist" aria-label="Día de la semana"></section>
+
+  <section class="departures" aria-live="polite">
+    <div class="departures-head">
+      <span>Hora</span>
+      <span>Materia</span>
+      <span>Salón</span>
+      <span></span>
+    </div>
+    <ul id="departures-list" class="departures-list">
+      <!-- filas generadas por script.js -->
+    </ul>
+    <p id="empty-state" class="empty-state" hidden>Este día no tiene clases todavía. Agrega una abajo o sube tu horario en CSV.</p>
+  </section>
+
+  <section class="editor">
+    <div class="editor-col">
+      <h2>Agregar clase</h2>
+      <form id="add-form" class="add-form">
+        <label>
+          Materia
+          <input type="text" id="f-subject" placeholder="Ej. Historia" required>
+        </label>
+        <label>
+          Día
+          <select id="f-day" required></select>
+        </label>
+        <div class="time-row">
+          <label>
+            Entrada
+            <input type="time" id="f-start" required>
+          </label>
+          <label>
+            Salida
+            <input type="time" id="f-end" required>
+          </label>
+        </div>
+        <label>
+          Salón <span class="optional">(opcional)</span>
+          <input type="text" id="f-room" placeholder="Ej. B-204">
+        </label>
+        <button type="submit" class="primary-btn">Agregar a mi horario</button>
+      </form>
+    </div>
+
+    <div class="editor-col">
+      <h2>Subir foto de tu horario</h2>
+      <p class="hint">Toma una foto o sube una imagen de tu horario. Lo leemos automáticamente y te dejamos revisar antes de guardar nada.</p>
+      <label class="file-drop" id="photo-drop" for="photo-input">
+        <span id="photo-drop-text">Elige o toma una foto</span>
+        <input type="file" id="photo-input" accept="image/*" hidden>
+      </label>
+      <p id="photo-status" class="csv-feedback" role="status"></p>
+    </div>
+
+    <div class="editor-col">
+      <h2>Subir horario (CSV)</h2>
+      <p class="hint">Una clase por línea: <code>Materia,Día,HoraInicio,HoraFin,Salón</code></p>
+      <p class="hint hint-example">Ejemplo: <code>Historia,Lunes,13:00,14:00,B-204</code></p>
+      <label class="file-drop" id="file-drop" for="csv-input">
+        <span id="file-drop-text">Elige un archivo .csv o arrástralo aquí</span>
+        <input type="file" id="csv-input" accept=".csv,text/csv" hidden>
+      </label>
+      <div class="csv-actions">
+        <button type="button" id="download-template" class="ghost-btn">Descargar plantilla</button>
+        <button type="button" id="clear-all" class="ghost-btn danger">Borrar todo mi horario</button>
+      </div>
+      <p id="csv-feedback" class="csv-feedback" role="status"></p>
+    </div>
+  </section>
+
+  <section class="review-panel" id="review-panel" hidden>
+    <h2>Revisa lo que detectamos en tu foto</h2>
+    <p class="hint">Corrige lo que haga falta y desmarca lo que no aplique. Nada se guarda hasta que le des a "Agregar seleccionadas".</p>
+    <ul id="review-list" class="review-list"></ul>
+    <div class="csv-actions">
+      <button type="button" id="review-add" class="primary-btn">Agregar seleccionadas</button>
+      <button type="button" id="review-cancel" class="ghost-btn">Descartar</button>
+    </div>
+  </section>
+
+</div>
+
+<button type="button" id="chat-toggle" class="chat-toggle" aria-label="Abrir asistente" hidden>💬</button>
+
+<div class="chat-panel" id="chat-panel" hidden>
+  <div class="chat-header">
+    <span>Asistente de tu horario</span>
+    <button type="button" id="chat-close" class="chat-close" aria-label="Cerrar">✕</button>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-bubble chat-bubble-bot">Hola 👋 Mándame una foto de tu horario y te ayudo a agregarlo, o pregúntame lo que necesites.</div>
+  </div>
+  <div class="chat-image-preview" id="chat-image-preview" hidden>
+    <img id="chat-image-thumb" alt="Foto adjunta">
+    <button type="button" id="chat-image-remove" aria-label="Quitar foto">✕</button>
+  </div>
+  <form id="chat-form" class="chat-input-row">
+    <label class="chat-attach" for="chat-image-input" aria-label="Adjuntar foto">📷</label>
+    <input type="file" id="chat-image-input" accept="image/*" hidden>
+    <input type="text" id="chat-text-input" placeholder="Escribe un mensaje…" autocomplete="off">
+    <button type="submit" class="chat-send" aria-label="Enviar">➤</button>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
